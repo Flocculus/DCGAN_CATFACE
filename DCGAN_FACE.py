@@ -80,7 +80,6 @@ dataset = dset.ImageFolder(root=dataroot,
                                transforms.Resize(image_size),
                                transforms.CenterCrop(image_size),
                                transforms.RandomHorizontalFlip(p=0.5),
-                               #transforms.Grayscale(num_output_channels=3),
                                transforms.ToTensor(),
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                                #AddGaussianNoise(0., 0.1),
@@ -125,7 +124,6 @@ class Generator(nn.Module):
             nn.BatchNorm2d(ngf * 8),
             #nn.ReLU(True),
             nn.LeakyReLU(0.2, inplace=True),
-            #nn.Dropout(p=0.3),
             # state size. (ngf*8) x 8 x 8
             nn.ConvTranspose2d( ngf * 8, ngf * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 4),
@@ -141,16 +139,7 @@ class Generator(nn.Module):
             nn.Tanh()
             # state size. (nc) x 64 x 64
         )
-        self.fc = nn.Linear(nz,ngf*8)
-        self.drop = nn.Dropout(p=0.3)
     def forward(self, input):
-        #print(input.shape)
-        #x = input.view(-1,nz)
-        #print(x.shape)
-        #x = F.leaky_relu(self.fc(x),negative_slope=0.2, inplace=True)
-        #x = x.unsqueeze(2)
-        #x = x.unsqueeze(2)
-        #print(x.shape)
         return self.main(input)
 
 # Create the generator
@@ -177,38 +166,28 @@ class Discriminator(nn.Module):
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf),
             nn.LeakyReLU(0.2, inplace=True),
-            #nn.Dropout(p=0.3),
             # state size. (ndf) x 32 x 32
             nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf * 2),
             nn.LeakyReLU(0.2, inplace=True),
-            #nn.Dropout(p=0.3),
             # state size. (ndf*2) x 16 x 16
             nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf * 4),
             nn.LeakyReLU(0.2, inplace=True),
-            #nn.Dropout(p=0.3),
             # state size. (ndf*4) x 8 x 8
             nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf * 8),
             nn.LeakyReLU(0.2, inplace=True),
-            #nn.Dropout(p=0.3),
             # state size. (ndf*8) x 4 x 4
             #nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
             #nn.Sigmoid()
         )
         self.fc1 = nn.Linear(ndf * 8 *4 * 4,1)
-        #self.fc2 = nn.Linear(ndf * 8,ndf * 2)
-        #self.fc3 = nn.Linear(ndf * 2,ndf)
-        #self.fc4 = nn.Linear(ndf * 8,1)
         self.Sigmoid = nn.Sigmoid()
     def forward(self, input):
         x = self.main(input)
         x = x.view(-1, ndf * 8 *4 * 4)
         x = F.leaky_relu(self.fc1(x),negative_slope=0.2, inplace=True)
-        #x = F.leaky_relu(self.fc2(x),negative_slope=0.2, inplace=True)
-        #x = F.leaky_relu(self.fc3(x),negative_slope=0.2, inplace=True)
-        #x = F.leaky_relu(self.fc4(x),negative_slope=0.2, inplace=True)
         return self.Sigmoid(x)
 # Create the Discriminator
 netD = Discriminator(ngpu).to(device)
@@ -238,8 +217,7 @@ fake_label = 0
 # Setup Adam optimizers for both G and D
 optimizerD = optim.Adam(netD.parameters(), lr=lr/2.0, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
-#optimizerD = optim.SGD(netD.parameters(), lr=lr, momentum=0.9)
-#optimizerG = optim.SGD(netG.parameters(), lr=lr, momentum=0.9)
+
 
 # Training Loop
 
